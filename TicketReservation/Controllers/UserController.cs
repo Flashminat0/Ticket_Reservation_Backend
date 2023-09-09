@@ -38,4 +38,13 @@ public class UserController : ControllerBase
 
         return Ok(user);
     }
+    
+    
+    [HttpPost]
+    public async Task<IActionResult> CreateUser(User user)
+    {
+        await _userService.Create(user);
+
+        return CreatedAtAction(nameof(GetUser), new {nic = user.NIC}, user);
+    }
 }

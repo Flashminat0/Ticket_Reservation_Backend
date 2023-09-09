@@ -24,4 +24,16 @@ public class UserService
 
     public async Task<User> GetSingle(string nic) =>
         await _userCollection.Find(user => user.NIC == nic).FirstOrDefaultAsync();
+
+
+    public async Task Create(User user) =>
+        await _userCollection.InsertOneAsync(user);
+
+
+    public async Task Update(string nic, User userIn) =>
+        await _userCollection.ReplaceOneAsync(user => user.NIC == nic, userIn);
+
+
+    public async Task Remove(string nic) =>
+        await _userCollection.DeleteOneAsync(user => user.NIC == nic);
 }

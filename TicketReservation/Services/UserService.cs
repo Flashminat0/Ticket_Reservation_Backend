@@ -20,7 +20,8 @@ public class UserService
 
     public async Task<List<User>> GetAll() =>
         await _userCollection.Find(user => true).ToListAsync();
-    
-    
-     
+
+
+    public async Task<User> GetSingle(string nic) =>
+        await _userCollection.Find(user => user.NIC == nic).FirstOrDefaultAsync();
 }

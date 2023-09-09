@@ -24,4 +24,18 @@ public class UserController : ControllerBase
 
         return Ok(users);
     }
+
+
+    [HttpGet("{nic}")]
+    public async Task<IActionResult> GetUser(string nic)
+    {
+        var user = await _userService.GetSingle(nic);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(user);
+    }
 }

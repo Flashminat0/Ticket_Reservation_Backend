@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson.IO;
 using TicketReservation.Models;
 using TicketReservation.Services;
 
@@ -38,13 +39,111 @@ public class UserController : ControllerBase
 
         return Ok(user);
     }
-    
-    
-    [HttpPost]
-    public async Task<IActionResult> CreateUser(User user)
-    {
-        await _userService.Create(user);
 
-        return CreatedAtAction(nameof(GetUser), new {nic = user.NIC}, user);
+
+    [HttpPost]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest user)
+    {
+        //validate the user
+        if (user == null)
+        {
+            return BadRequest();
+        }
+
+        if (user.Nic == null || user.Name == null || user.Age == 0 || user.Age < 0)
+        {
+            string errorMessages = "";
+
+            if (user.Nic == null)
+            {
+                errorMessages += "NIC is required. ";
+            }
+
+            if (user.Name == null)
+            {
+                errorMessages += "Name is required. ";
+            }
+
+            if (user.Age == 0)
+            {
+                errorMessages += "Age is required. ";
+            }
+
+            return BadRequest(errorMessages);
+        }
+
+        if (!user.Nic.Contains('v'))
+        {
+            return BadRequest("Wrong NIC format.");
+        }
+
+
+        User newUser = new User
+        {
+            Nic = user.Nic,
+            Name = user.Name,
+            Age = user.Age,
+            IsActive = user.IsActive
+        };
+
+
+        await _userService.Create(newUser);
+
+        return CreatedAtAction(nameof(GetUser), new { nic = user.Nic }, user);
+    }
+
+
+    [HttpPut("{nic}")]
+    public async Task<IActionResult> UpdateUser(string nic, [FromBody] EditUserRequest user)
+    {
+        //validate the user
+        if (user == null)
+        {
+            return BadRequest();
+        }
+
+        if ( user.Name == null || user.Age == 0 || user.Age < 0)
+        {
+            string errorMessages = "";
+            
+
+            if (user.Name == null)
+            {
+                errorMessages += "Name is required. ";
+            }
+
+            if (user.Age == 0)
+            {
+                errorMessages += "Age is required. ";
+            }
+
+            return BadRequest(errorMessages);
+        }
+
+        if (!nic.Contains('v'))
+        {
+            return BadRequest("Wrong NIC format.");
+        }
+
+        var userToUpdate = await _userService.GetSingle(nic);
+
+        if (userToUpdate == null)
+        {
+            return NotFound();
+        }
+
+        User newUser = new User
+        {
+            Id = userToUpdate.Id,
+            Nic = userToUpdate.Nic,
+            Name = user.Name,
+            Age = user.Age,
+            IsActive = user.IsActive
+        };
+
+        await _userService.Update(nic, newUser);
+
+
+        return CreatedAtAction(nameof(GetUser), new { nic = nic }, user);
     }
 }

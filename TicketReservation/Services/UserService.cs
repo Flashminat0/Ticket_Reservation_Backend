@@ -23,7 +23,7 @@ public class UserService
 
 
     public async Task<User> GetSingle(string nic) =>
-        await _userCollection.Find(user => user.NIC == nic).FirstOrDefaultAsync();
+        await _userCollection.Find(user => user.Nic == nic).FirstOrDefaultAsync();
 
 
     public async Task Create(User user) =>
@@ -31,9 +31,9 @@ public class UserService
 
 
     public async Task Update(string nic, User userIn) =>
-        await _userCollection.ReplaceOneAsync(user => user.NIC == nic, userIn);
+        await _userCollection.ReplaceOneAsync(user => user.Nic == nic, userIn);
 
 
     public async Task Remove(string nic) =>
-        await _userCollection.DeleteOneAsync(user => user.NIC == nic);
+        await _userCollection.DeleteOneAsync(user => user.Nic == nic);
 }

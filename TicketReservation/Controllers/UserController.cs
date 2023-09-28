@@ -146,4 +146,20 @@ public class UserController : ControllerBase
 
         return CreatedAtAction(nameof(GetUser), new { nic = nic }, user);
     }
+    
+    
+    [HttpDelete("{nic}")]
+    public async Task <IActionResult> DeleteUser(string nic)
+    {
+        var user = await _userService.GetSingle(nic);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        await _userService.Remove(nic);
+
+        return NoContent();
+    }
 }

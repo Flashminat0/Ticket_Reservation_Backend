@@ -28,7 +28,7 @@ public class LoginController : ControllerBase
             return BadRequest();
         }
 
-        if (loginRequest.Nic == null || loginRequest.Password == null)
+        if (loginRequest.Nic == "" || loginRequest.Password == "")
         {
             string errorMessages = "";
 
@@ -45,15 +45,36 @@ public class LoginController : ControllerBase
             return BadRequest(errorMessages);
         }
 
-        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(loginRequest.Password, loginRequest.Nic);
+        var isUserExist = await _loginService.GetSingle(loginRequest.Nic);
+
+        // _logger.LogInformation(isUserExist.ToJson());
+
+        if (isUserExist is null)
+        {
+            return BadRequest("User does not exists");
+        }
+
+        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(loginRequest.Password, isUserExist.Salt);
 
         var login = await _loginService.Login(loginRequest.Nic, hashedPassword);
 
-        if (login == null)
+        if (login is null)
         {
-            return NotFound();
+            return BadRequest("Incorrect Credentials");
         }
 
+        var newLogin = new Login()
+        {
+            Nic = login.Nic,
+            Password = login.Password,
+            IsActive = login.IsActive,
+            Salt = login.Salt,
+            Id = login.Id,
+            LastLogin = DateTime.Now,
+        };
+
+        await _loginService.Update(login.Nic, newLogin);
+        
         return Ok(login);
     }
 
@@ -67,7 +88,7 @@ public class LoginController : ControllerBase
             return BadRequest();
         }
 
-        _logger.LogInformation(registerRequest.ToJson());
+        // _logger.LogInformation(registerRequest.ToJson());
 
         if (registerRequest.Nic == String.Empty || registerRequest.Password == String.Empty)
         {
@@ -91,8 +112,8 @@ public class LoginController : ControllerBase
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerRequest.Password, salt);
 
         var login = await _loginService.GetSingle(registerRequest.Nic);
-        
-        _logger.LogInformation(login.ToJson());
+
+        // _logger.LogInformation(login.ToJson());
 
         if (login != null)
         {
@@ -104,6 +125,8 @@ public class LoginController : ControllerBase
             Nic = registerRequest.Nic,
             Password = hashedPassword,
             Salt = salt,
+            LastLogin = DateTime.Now,
+            IsActive = true,
         });
 
         return Ok("User registered successfully");

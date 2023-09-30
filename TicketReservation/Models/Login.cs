@@ -12,9 +12,11 @@ public class Login
     [BsonElement("password")] public string Password { get; set; } = string.Empty;
 
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
-    
+
     [BsonElement("is_active")] public bool IsActive { get; set; }
-    
+
+    [BsonElement("is_admin")] public bool IsAdmin { get; set; }
+
     [BsonElement("last_login")] public DateTime LastLogin { get; set; }
     [BsonElement("salt")] public string Salt { get; set; } = string.Empty;
 }
@@ -24,4 +26,13 @@ public class LoginRequest
     [BsonElement("password")] public string Password { get; set; } = string.Empty;
 
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
+}
+
+public class ActivateRequest
+{
+    [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
+
+    [BsonElement("is_active")] public bool IsActive { get; set; }
+
+    [BsonElement("is_admin")] public bool IsAdmin { get; set; }
 }

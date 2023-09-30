@@ -101,17 +101,17 @@ public class UserController : ControllerBase
             return BadRequest();
         }
 
-        if ( user.Name == String.Empty || user.Age == 0 || user.Age < 0)
+        if (user.Name == String.Empty || user.Age == 0 || user.Age < 0)
         {
             string errorMessages = "";
-            
+
 
             if (user.Name == String.Empty)
             {
                 errorMessages += "Name is required. ";
             }
 
-            if (user.Age == 0)
+            if (user.Age <= 0)
             {
                 errorMessages += "Age is required. ";
             }
@@ -135,8 +135,8 @@ public class UserController : ControllerBase
         {
             Id = userToUpdate.Id,
             Nic = userToUpdate.Nic,
-            Name = user.Name,
-            Age = user.Age,
+            Name = user.Name ?? userToUpdate.Name,
+            Age = user.Age ?? userToUpdate.Age,
         };
 
         await _userService.Update(nic, newUser);
@@ -144,10 +144,10 @@ public class UserController : ControllerBase
 
         return CreatedAtAction(nameof(GetUser), new { nic = nic }, user);
     }
-    
-    
+
+
     [HttpDelete("{nic}")]
-    public async Task <IActionResult> DeleteUser(string nic)
+    public async Task<IActionResult> DeleteUser(string nic)
     {
         var user = await _userService.GetSingle(nic);
 

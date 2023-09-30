@@ -1,7 +1,17 @@
-﻿using MongoDB.Bson;
+﻿using System.ComponentModel;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace TicketReservation.Models;
+
+public enum UserTypeEnum
+{
+    [Description("Backoffice")] Backoffice,
+
+    [Description("Travel Agent")] TravelAgent,
+
+    [Description("Customer")] Customer
+}
 
 public class User
 {
@@ -15,7 +25,7 @@ public class User
 
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
 
-    [BsonElement("is_active")] public bool IsActive { get; set; }
+    [BsonElement("user_type")] public UserTypeEnum UserType { get; set; } = UserTypeEnum.Customer;
 }
 
 public class CreateUserRequest
@@ -26,14 +36,13 @@ public class CreateUserRequest
 
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
 
-    [BsonElement("is_active")] public bool IsActive { get; set; }
+    [BsonElement("user_type")] public string UserType { get; set; } = string.Empty;
 }
 
 public class EditUserRequest
 {
     [BsonElement("name")] public string? Name { get; set; } = string.Empty;
-
     [BsonElement("age")] public int Age { get; set; } = 0;
-    
-    [BsonElement("is_active")] public bool IsActive { get; set; } = false;
+
+    [BsonElement("user_type")] public string UserType { get; set; } = string.Empty;
 }

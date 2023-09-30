@@ -131,4 +131,42 @@ public class LoginController : ControllerBase
 
         return Ok("User registered successfully");
     }
+
+
+    [HttpPost("activate")]
+    public async Task<IActionResult> Activate([FromBody] ActivateRequest activateRequest)
+    {
+        if (activateRequest == null)
+        {
+            return BadRequest();
+        }
+
+        if (activateRequest.Nic == String.Empty)  
+        {
+            return BadRequest("NIC is required");
+        }
+        
+        var login = await _loginService.GetSingle(activateRequest.Nic);
+        
+        if (login == null)
+        {
+            return BadRequest("User does not exists");
+        }
+        
+        var newLogin = new Login()
+        {
+            Nic = login.Nic,
+            Password = login.Password,
+            IsActive = activateRequest.IsActive,
+            IsAdmin = activateRequest.IsAdmin,
+            Salt = login.Salt,
+            Id = login.Id,
+            LastLogin = login.LastLogin,
+        };
+        
+        await _loginService.Update(login.Nic, newLogin);
+        
+        return Ok("User activated successfully");
+    }
+    
 }

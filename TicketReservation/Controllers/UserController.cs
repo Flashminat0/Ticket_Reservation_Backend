@@ -50,16 +50,16 @@ public class UserController : ControllerBase
             return BadRequest();
         }
 
-        if (user.Nic == null || user.Name == null || user.Age == 0 || user.Age < 0)
+        if (user.Nic == String.Empty || user.Name == String.Empty || user.Age == 0 || user.Age < 0)
         {
             string errorMessages = "";
 
-            if (user.Nic == null)
+            if (user.Nic == String.Empty)
             {
                 errorMessages += "NIC is required. ";
             }
 
-            if (user.Name == null)
+            if (user.Name == String.Empty)
             {
                 errorMessages += "Name is required. ";
             }
@@ -83,7 +83,6 @@ public class UserController : ControllerBase
             Nic = user.Nic,
             Name = user.Name,
             Age = user.Age,
-            IsActive = user.IsActive
         };
 
 
@@ -102,12 +101,12 @@ public class UserController : ControllerBase
             return BadRequest();
         }
 
-        if ( user.Name == null || user.Age == 0 || user.Age < 0)
+        if ( user.Name == String.Empty || user.Age == 0 || user.Age < 0)
         {
             string errorMessages = "";
             
 
-            if (user.Name == null)
+            if (user.Name == String.Empty)
             {
                 errorMessages += "Name is required. ";
             }
@@ -138,7 +137,6 @@ public class UserController : ControllerBase
             Nic = userToUpdate.Nic,
             Name = user.Name,
             Age = user.Age,
-            IsActive = user.IsActive
         };
 
         await _userService.Update(nic, newUser);

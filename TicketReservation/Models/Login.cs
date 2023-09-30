@@ -10,29 +10,32 @@ public class Login
     public string Id { get; set; } = string.Empty;
 
     [BsonElement("password")] public string Password { get; set; } = string.Empty;
-
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
-
     [BsonElement("is_active")] public bool IsActive { get; set; }
-
     [BsonElement("is_admin")] public bool IsAdmin { get; set; }
-
     [BsonElement("last_login")] public DateTime LastLogin { get; set; }
     [BsonElement("salt")] public string Salt { get; set; } = string.Empty;
 }
 
-public class LoginRequest
+public class AuthRequest
 {
     [BsonElement("password")] public string Password { get; set; } = string.Empty;
-
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
 }
 
 public class ActivateRequest
 {
+    [BsonElement("requesting_nic")] public string RequestingNic { get; set; } = string.Empty;
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
-
     [BsonElement("is_active")] public bool IsActive { get; set; }
-
     [BsonElement("is_admin")] public bool IsAdmin { get; set; }
+}
+
+public class AuthResponse
+{
+    [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
+    [BsonElement("is_active")] public bool IsActive { get; set; }
+    [BsonElement("is_admin")] public bool IsAdmin { get; set; }
+    [BsonElement("last_login")] public DateTime LastLogin { get; set; }
+    public string Message { get; set; } = string.Empty;
 }

@@ -20,24 +20,24 @@ public class LoginController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+    public async Task<IActionResult> Login([FromBody] AuthRequest authRequest)
     {
         //validate the user
-        if (loginRequest == null)
+        if (authRequest == null)
         {
             return BadRequest();
         }
 
-        if (loginRequest.Nic == "" || loginRequest.Password == "")
+        if (authRequest.Nic == "" || authRequest.Password == "")
         {
             string errorMessages = "";
 
-            if (loginRequest.Nic == null)
+            if (authRequest.Nic == String.Empty)
             {
                 errorMessages += "NIC is required. ";
             }
 
-            if (loginRequest.Password == null)
+            if (authRequest.Password == String.Empty)
             {
                 errorMessages += "Password is required. ";
             }
@@ -45,7 +45,7 @@ public class LoginController : ControllerBase
             return BadRequest(errorMessages);
         }
 
-        var isUserExist = await _loginService.GetSingle(loginRequest.Nic);
+        var isUserExist = await _loginService.GetSingle(authRequest.Nic);
 
         // _logger.LogInformation(isUserExist.ToJson());
 
@@ -54,9 +54,9 @@ public class LoginController : ControllerBase
             return BadRequest("User does not exists");
         }
 
-        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(loginRequest.Password, isUserExist.Salt);
+        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(authRequest.Password, isUserExist.Salt);
 
-        var login = await _loginService.Login(loginRequest.Nic, hashedPassword);
+        var login = await _loginService.Login(authRequest.Nic, hashedPassword);
 
         if (login is null)
         {
@@ -74,13 +74,22 @@ public class LoginController : ControllerBase
         };
 
         await _loginService.Update(login.Nic, newLogin);
-        
-        return Ok(login);
+
+        AuthResponse authResponse = new AuthResponse()
+        {
+            Nic = login.Nic,
+            IsActive = login.IsActive,
+            IsAdmin = login.IsAdmin,
+            LastLogin = login.LastLogin,
+            Message = "User logged in successfully"
+        };
+
+        return Ok(authResponse);
     }
 
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] LoginRequest registerRequest)
+    public async Task<IActionResult> Register([FromBody] AuthRequest registerRequest)
     {
         //validate the user
         if (registerRequest == null)
@@ -129,7 +138,16 @@ public class LoginController : ControllerBase
             IsActive = true,
         });
 
-        return Ok("User registered successfully");
+        AuthResponse authResponse = new AuthResponse()
+        {
+            Nic = login.Nic,
+            IsActive = login.IsActive,
+            IsAdmin = login.IsAdmin,
+            LastLogin = login.LastLogin,
+            Message = "User registered successfully"
+        };
+
+        return Ok(authResponse);
     }
 
 
@@ -141,18 +159,26 @@ public class LoginController : ControllerBase
             return BadRequest();
         }
 
-        if (activateRequest.Nic == String.Empty)  
+        if (activateRequest.Nic == String.Empty)
         {
             return BadRequest("NIC is required");
         }
-        
+
+        var requester = await _loginService.GetSingle(activateRequest.RequestingNic);
+
+        if (!requester.IsAdmin)
+        {
+            return BadRequest("You are not authorized to perform this action");
+        }
+
+
         var login = await _loginService.GetSingle(activateRequest.Nic);
-        
+
         if (login == null)
         {
             return BadRequest("User does not exists");
         }
-        
+
         var newLogin = new Login()
         {
             Nic = login.Nic,
@@ -163,10 +189,19 @@ public class LoginController : ControllerBase
             Id = login.Id,
             LastLogin = login.LastLogin,
         };
-        
+
         await _loginService.Update(login.Nic, newLogin);
-        
-        return Ok("User activated successfully");
+
+        AuthResponse authResponse = new AuthResponse()
+        {
+            Nic = login.Nic,
+            IsActive = newLogin.IsActive,
+            IsAdmin = newLogin.IsAdmin,
+            LastLogin = login.LastLogin,
+            Message = "User activated successfully"
+        };
+
+
+        return Ok(authResponse);
     }
-    
 }

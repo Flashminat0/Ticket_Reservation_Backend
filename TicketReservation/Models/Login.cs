@@ -8,7 +8,6 @@ public class Login
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = string.Empty;
-
     [BsonElement("password")] public string Password { get; set; } = string.Empty;
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
     [BsonElement("is_active")] public bool IsActive { get; set; }

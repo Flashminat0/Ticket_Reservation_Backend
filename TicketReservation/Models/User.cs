@@ -4,11 +4,17 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TicketReservation.Models;
 
-public enum UserTypeEnum
+public static class UserTypeCl
 {
-    [Description("Backoffice")] Backoffice,
-    [Description("Travel Agent")] TravelAgent,
-    [Description("Customer")] Customer
+    public const string Backoffice = "Backoffice";
+    public const string TravelAgent = "Travel Agent";
+    public const string Customer = "Customer";
+}
+
+public static class UserGenderCl
+{
+    public const string Male = "Male";
+    public const string Female = "Female";
 }
 
 public class User
@@ -16,10 +22,12 @@ public class User
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = string.Empty;
+
     [BsonElement("name")] public string Name { get; set; } = string.Empty;
     [BsonElement("age")] public int Age { get; set; }
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
-    [BsonElement("user_type")] public UserTypeEnum UserType { get; set; } = UserTypeEnum.Customer;
+    [BsonElement("user_type")] public string UserType { get; set; } = UserTypeCl.Customer;
+    [BsonElement("gender")] public string UserGender = UserGenderCl.Male;
 }
 
 public class CreateUserRequest
@@ -27,12 +35,14 @@ public class CreateUserRequest
     [BsonElement("name")] public string Name { get; set; } = string.Empty;
     [BsonElement("age")] public int Age { get; set; }
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
-    [BsonElement("user_type")] public string UserType { get; set; } = string.Empty;
+    [BsonElement("user_type")] public string UserType { get; set; } = UserTypeCl.Customer;
+    [BsonElement("gender")] public string UserGender = UserGenderCl.Male;
 }
 
 public class EditUserRequest
 {
     [BsonElement("name")] public string? Name { get; set; } = string.Empty;
-    [BsonElement("age")] public int Age { get; set; } = 0;
-    [BsonElement("user_type")] public string UserType { get; set; } = string.Empty;
+    [BsonElement("age")] public int? Age { get; set; } = 0;
+    [BsonElement("user_type")] public string? UserType { get; set; } = string.Empty;
+    [BsonElement("gender")] public string UserGender = String.Empty;
 }

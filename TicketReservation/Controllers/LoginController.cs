@@ -140,10 +140,10 @@ public class LoginController : ControllerBase
 
         AuthResponse authResponse = new AuthResponse()
         {
-            Nic = login.Nic,
-            IsActive = login.IsActive,
-            IsAdmin = login.IsAdmin,
-            LastLogin = login.LastLogin,
+            Nic = registerRequest.Nic,
+            IsActive = true,
+            IsAdmin = false,
+            LastLogin = DateTime.Now,
             Message = "User registered successfully"
         };
 

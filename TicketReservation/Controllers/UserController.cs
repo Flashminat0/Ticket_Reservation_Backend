@@ -11,11 +11,13 @@ public class UserController : ControllerBase
 {
     private readonly ILogger<UserController> _logger;
     private readonly UserService _userService;
+    private readonly LoginService _loginService;
 
-    public UserController(ILogger<UserController> logger, UserService userService)
+    public UserController(ILogger<UserController> logger, UserService userService, LoginService loginService)
     {
         _logger = logger;
         _userService = userService;
+        _loginService = loginService;
     }
 
     [HttpGet]
@@ -50,7 +52,7 @@ public class UserController : ControllerBase
             return BadRequest();
         }
 
-        if (user.Nic == String.Empty || user.Name == String.Empty || user.Age == 0 || user.Age < 0)
+        if (user.Nic == String.Empty || user.Name == String.Empty || user.Age == 0 || user.Age < 0 || user.UserType == String.Empty)
         {
             string errorMessages = "";
 
@@ -68,13 +70,51 @@ public class UserController : ControllerBase
             {
                 errorMessages += "Age is required. ";
             }
+            
+            if (user.UserType == String.Empty)
+            {
+                errorMessages += "User type is required. ";
+            }
 
             return BadRequest(errorMessages);
         }
 
-        if (!user.Nic.Contains('v'))
+        if (!user.Nic.ToLower().Contains('v'))
         {
             return BadRequest("Wrong NIC format.");
+        }
+
+        var userType = UserTypeCl.Customer;
+
+
+        if (user.UserType != String.Empty)
+        {
+            if (user.UserType.ToLower() == UserTypeCl.Backoffice.ToLower())
+            {
+                userType = UserTypeCl.Backoffice;
+            }
+            else if (user.UserType.ToLower() == UserTypeCl.TravelAgent.ToLower())
+            {
+                userType = UserTypeCl.TravelAgent;
+            }
+            else if (user.UserType.ToLower() == UserTypeCl.Customer.ToLower())
+            {
+                userType = UserTypeCl.Customer;
+            }
+        }
+
+        string userGender = UserGenderCl.Male;
+
+        if (user.UserGender != String.Empty)
+        {
+            if (user.UserGender.ToLower() == UserGenderCl.Male.ToLower())
+            {
+                userGender = UserGenderCl.Male;
+            }
+            else
+            {
+                userGender = UserGenderCl.Female;
+            }
         }
 
 
@@ -83,6 +123,7 @@ public class UserController : ControllerBase
             Nic = user.Nic,
             Name = user.Name,
             Age = user.Age,
+            UserType = userType,
         };
 
 

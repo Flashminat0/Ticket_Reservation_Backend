@@ -22,7 +22,7 @@ public class UserService
         await _userCollection.Find(user => true).ToListAsync();
 
 
-    public async Task<User> GetSingle(string nic) =>
+    public async Task<User?> GetSingle(string nic) =>
         await _userCollection.Find(user => user.Nic == nic).FirstOrDefaultAsync();
 
 

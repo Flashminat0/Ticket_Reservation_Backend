@@ -27,7 +27,7 @@ public class User
     [BsonElement("age")] public int Age { get; set; }
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
     [BsonElement("user_type")] public string UserType { get; set; } = UserTypeCl.Customer;
-    [BsonElement("gender")] public string UserGender = UserGenderCl.Male;
+    [BsonElement("gender")] public string UserGender { get; set; } = UserGenderCl.Male;
 }
 
 public class CreateUserRequest
@@ -36,7 +36,7 @@ public class CreateUserRequest
     [BsonElement("age")] public int Age { get; set; }
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
     [BsonElement("user_type")] public string UserType { get; set; } = UserTypeCl.Customer;
-    [BsonElement("gender")] public string UserGender = UserGenderCl.Male;
+    [BsonElement("gender")] public string UserGender { get; set; } = UserGenderCl.Male;
 }
 
 public class EditUserRequest
@@ -44,7 +44,7 @@ public class EditUserRequest
     [BsonElement("name")] public string? Name { get; set; } = string.Empty;
     [BsonElement("age")] public int? Age { get; set; } = 0;
     [BsonElement("user_type")] public string? UserType { get; set; } = string.Empty;
-    [BsonElement("gender")] public string? UserGender = String.Empty;
+    [BsonElement("gender")] public string? UserGender { get; set; } = String.Empty;
 }
 
 public class DeleteUserRequest

@@ -289,7 +289,7 @@ public class UserController : ControllerBase
             ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
             {
                 Success = false,
-                Message = "Please Provide Admin Creds"
+                Message = "Please Provide Admin Creds. Or no Admin found with the given NIC"
             };
 
             return BadRequest(apiFailedResponse);

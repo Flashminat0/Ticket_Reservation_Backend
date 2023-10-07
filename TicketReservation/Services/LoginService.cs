@@ -19,7 +19,7 @@ public class LoginService
     }
 
 
-    public async Task<Login> Login(string nic, string password) =>
+    public async Task<Login?> Login(string nic, string password) =>
         await _loginCollection.Find(login => login.Nic == nic && login.Password == password).FirstOrDefaultAsync();
 
     public async Task<Login?> GetSingle(string nic) =>

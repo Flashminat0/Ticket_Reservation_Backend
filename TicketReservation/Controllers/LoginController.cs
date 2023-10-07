@@ -363,7 +363,7 @@ public class LoginController : ControllerBase
         DateTime lastLogin = isUserExist.LastLogin;
 
         // check time difference
-        int maximumInactiveTime = 3;
+        int maximumInactiveTime = 15;
         TimeSpan timeDifference = DateTime.UtcNow - lastLogin;
 
         // _logger.LogInformation("Time difference: " + timeDifference.TotalMinutes);

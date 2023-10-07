@@ -78,6 +78,19 @@ public class UserController : ControllerBase
             return BadRequest(apiFailedResponse);
         }
 
+        var existingUser = await _userService.GetSingle(user.Nic);
+        
+        if (existingUser != null)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User already exists. Please use update endpoint to update the user"
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
         if (user.Nic == String.Empty || user.Name == String.Empty || user.Age == 0 || user.Age < 0 ||
             user.UserType == String.Empty || user.UserGender == String.Empty)
         {
@@ -127,8 +140,8 @@ public class UserController : ControllerBase
 
             return BadRequest(apiFailedResponse);
         }
-        
-        
+
+
         var userToCheck = await _loginService.GetSingle(user.Nic);
 
         if (userToCheck == null)
@@ -138,22 +151,20 @@ public class UserController : ControllerBase
                 Success = false,
                 Message = "User not Registered yet"
             };
-            
+
             return NotFound(apiFailedResponse);
         }
 
-        if (userToCheck.IsActive ==false)
+        if (userToCheck.IsActive == false)
         {
             ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
             {
                 Success = false,
                 Message = "User is not active"
             };
-            
+
             return BadRequest(apiFailedResponse);
         }
-        
-        
 
         var userType = UserTypeCl.Customer;
 
@@ -269,7 +280,7 @@ public class UserController : ControllerBase
 
 
     [HttpDelete("{nic}")]
-    public async Task<IActionResult> DeleteUser(string nic , [FromBody] DeleteUserRequest requestUser)
+    public async Task<IActionResult> DeleteUser(string nic, [FromBody] DeleteUserRequest requestUser)
     {
         var adminUser = await _userService.GetSingle(requestUser.Nic);
 
@@ -280,7 +291,7 @@ public class UserController : ControllerBase
                 Success = false,
                 Message = "Please Provide Admin Creds"
             };
-            
+
             return BadRequest(apiFailedResponse);
         }
 
@@ -291,11 +302,11 @@ public class UserController : ControllerBase
                 Success = false,
                 Message = "You are not authorized to perform this action"
             };
-            
+
             return BadRequest(apiFailedResponse);
         }
-        
-        
+
+
         var user = await _userService.GetSingle(nic);
 
         if (user == null)
@@ -317,7 +328,7 @@ public class UserController : ControllerBase
             Message = "User deleted successfully",
             Data = "GET FOK"
         };
-        
+
         return Ok(apiResponse);
     }
 }

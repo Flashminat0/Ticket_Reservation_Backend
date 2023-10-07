@@ -47,7 +47,7 @@ public class LoginController : ControllerBase
             {
                 errorMessages += "Password is required. ";
             }
-            
+
             ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
             {
                 Success = false,
@@ -149,6 +149,28 @@ public class LoginController : ControllerBase
             {
                 Success = false,
                 Message = errorMessages
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
+        if (!registerRequest.Nic.ToLower().Contains('v'))
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Invalid NIC"
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
+        if (registerRequest.Password.Length <= 7)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Password must be at least 8 characters"
             };
 
             return BadRequest(apiFailedResponse);

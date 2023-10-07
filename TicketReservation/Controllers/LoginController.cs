@@ -20,12 +20,18 @@ public class LoginController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] AuthRequest authRequest)
+    public async Task<IActionResult> Login([FromBody] AuthRequest? authRequest)
     {
         //validate the user
         if (authRequest == null)
         {
-            return BadRequest();
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Please provide the user credentials"
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
         if (authRequest.Nic == "" || authRequest.Password == "")
@@ -41,26 +47,42 @@ public class LoginController : ControllerBase
             {
                 errorMessages += "Password is required. ";
             }
+            
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = errorMessages
+            };
 
-            return BadRequest(errorMessages);
+            return BadRequest(apiFailedResponse);
         }
 
         var isUserExist = await _loginService.GetSingle(authRequest.Nic);
 
-        // _logger.LogInformation(isUserExist.ToJson());
-
         if (isUserExist is null)
         {
-            return BadRequest("User does not exists");
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User does not exists"
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(authRequest.Password, isUserExist.Salt);
 
         var login = await _loginService.Login(authRequest.Nic, hashedPassword);
 
-        if (login is null)
+        if (login == null)
         {
-            return BadRequest("Incorrect Credentials");
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Invalid credentials"
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
         var newLogin = new Login()
@@ -81,23 +103,33 @@ public class LoginController : ControllerBase
             IsActive = login.IsActive,
             IsAdmin = login.IsAdmin,
             LastLogin = login.LastLogin,
-            Message = "User logged in successfully"
         };
 
-        return Ok(authResponse);
+        ApiResponse<AuthResponse> apiResponse = new ApiResponse<AuthResponse>()
+        {
+            Success = true,
+            Message = "User logged in successfully",
+            Data = authResponse
+        };
+
+        return Ok(apiResponse);
     }
 
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] AuthRequest registerRequest)
+    public async Task<IActionResult> Register([FromBody] AuthRequest? registerRequest)
     {
         //validate the user
         if (registerRequest == null)
         {
-            return BadRequest();
-        }
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Please provide the user credentials"
+            };
 
-        // _logger.LogInformation(registerRequest.ToJson());
+            return BadRequest(apiFailedResponse);
+        }
 
         if (registerRequest.Nic == String.Empty || registerRequest.Password == String.Empty)
         {
@@ -113,30 +145,42 @@ public class LoginController : ControllerBase
                 errorMessages += "Password is required. ";
             }
 
-            return BadRequest(errorMessages);
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = errorMessages
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
+        var login = await _loginService.GetSingle(registerRequest.Nic);
+
+        if (login != null)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User already exists"
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
         string salt = BCrypt.Net.BCrypt.GenerateSalt();
 
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(registerRequest.Password, salt);
 
-        var login = await _loginService.GetSingle(registerRequest.Nic);
-
-        // _logger.LogInformation(login.ToJson());
-
-        if (login != null)
-        {
-            return BadRequest("User already exists");
-        }
-
-        await _loginService.Register(new Login
+        var newUser = new Login()
         {
             Nic = registerRequest.Nic,
             Password = hashedPassword,
             Salt = salt,
             LastLogin = DateTime.Now,
             IsActive = true,
-        });
+        };
+
+        await _loginService.Register(newUser);
 
         AuthResponse authResponse = new AuthResponse()
         {
@@ -144,31 +188,66 @@ public class LoginController : ControllerBase
             IsActive = true,
             IsAdmin = false,
             LastLogin = DateTime.Now,
-            Message = "User registered successfully"
         };
 
-        return Ok(authResponse);
+        ApiResponse<AuthResponse> apiResponse = new ApiResponse<AuthResponse>()
+        {
+            Success = true,
+            Message = "User registered successfully",
+            Data = authResponse
+        };
+
+        return Ok(apiResponse);
     }
 
 
     [HttpPost("activate")]
-    public async Task<IActionResult> Activate([FromBody] ActivateRequest activateRequest)
+    public async Task<IActionResult> Activate([FromBody] ActivateRequest? activateRequest)
     {
         if (activateRequest == null)
         {
-            return BadRequest();
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Please provide the user credentials"
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
         if (activateRequest.Nic == String.Empty)
         {
-            return BadRequest("NIC is required");
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Please provide the user NIC"
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
         var requester = await _loginService.GetSingle(activateRequest.RequestingNic);
 
+        if (requester == null)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Requesting user does not exist."
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
         if (!requester.IsAdmin)
         {
-            return BadRequest("You are not authorized to perform this action");
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "You are not authorized to perform this action."
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
 
@@ -176,7 +255,13 @@ public class LoginController : ControllerBase
 
         if (login == null)
         {
-            return BadRequest("User does not exists");
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User does not exists"
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
         var newLogin = new Login()
@@ -198,10 +283,15 @@ public class LoginController : ControllerBase
             IsActive = newLogin.IsActive,
             IsAdmin = newLogin.IsAdmin,
             LastLogin = login.LastLogin,
-            Message = "User activated successfully"
         };
 
+        ApiResponse<AuthResponse> apiResponse = new ApiResponse<AuthResponse>()
+        {
+            Success = true,
+            Message = "User activated successfully",
+            Data = authResponse
+        };
 
-        return Ok(authResponse);
+        return Ok(apiResponse);
     }
 }

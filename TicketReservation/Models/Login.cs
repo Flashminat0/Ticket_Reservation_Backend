@@ -36,5 +36,4 @@ public class AuthResponse
     [BsonElement("is_active")] public bool IsActive { get; set; }
     [BsonElement("is_admin")] public bool IsAdmin { get; set; }
     [BsonElement("last_login")] public DateTime LastLogin { get; set; }
-    public string Message { get; set; } = string.Empty;
 }

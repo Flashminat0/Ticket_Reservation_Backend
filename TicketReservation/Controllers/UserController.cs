@@ -127,6 +127,33 @@ public class UserController : ControllerBase
 
             return BadRequest(apiFailedResponse);
         }
+        
+        
+        var userToCheck = await _loginService.GetSingle(user.Nic);
+
+        if (userToCheck == null)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User not Registered yet"
+            };
+            
+            return NotFound(apiFailedResponse);
+        }
+
+        if (userToCheck.IsActive ==false)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User is not active"
+            };
+            
+            return BadRequest(apiFailedResponse);
+        }
+        
+        
 
         var userType = UserTypeCl.Customer;
 

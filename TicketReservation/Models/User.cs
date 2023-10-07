@@ -44,5 +44,10 @@ public class EditUserRequest
     [BsonElement("name")] public string? Name { get; set; } = string.Empty;
     [BsonElement("age")] public int? Age { get; set; } = 0;
     [BsonElement("user_type")] public string? UserType { get; set; } = string.Empty;
-    [BsonElement("gender")] public string UserGender = String.Empty;
+    [BsonElement("gender")] public string? UserGender = String.Empty;
+}
+
+public class DeleteUserRequest
+{
+    [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
 }

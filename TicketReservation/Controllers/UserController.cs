@@ -25,7 +25,14 @@ public class UserController : ControllerBase
     {
         var users = await _userService.GetAll();
 
-        return Ok(users);
+        ApiResponse<IEnumerable<User>> apiResponse = new ApiResponse<IEnumerable<User>>()
+        {
+            Success = true,
+            Message = "Users retrieved successfully",
+            Data = users
+        };
+
+        return Ok(apiResponse);
     }
 
 
@@ -36,10 +43,23 @@ public class UserController : ControllerBase
 
         if (user == null)
         {
-            return NotFound();
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User not found"
+            };
+
+            return NotFound(apiFailedResponse);
         }
 
-        return Ok(user);
+        ApiResponse<User> apiResponse = new ApiResponse<User>()
+        {
+            Success = true,
+            Message = "User retrieved successfully",
+            Data = user
+        };
+
+        return Ok(apiResponse);
     }
 
 
@@ -49,10 +69,17 @@ public class UserController : ControllerBase
         //validate the user
         if (user == null)
         {
-            return BadRequest();
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User not found"
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
-        if (user.Nic == String.Empty || user.Name == String.Empty || user.Age == 0 || user.Age < 0 || user.UserType == String.Empty)
+        if (user.Nic == String.Empty || user.Name == String.Empty || user.Age == 0 || user.Age < 0 ||
+            user.UserType == String.Empty || user.UserGender == String.Empty)
         {
             string errorMessages = "";
 
@@ -70,18 +97,35 @@ public class UserController : ControllerBase
             {
                 errorMessages += "Age is required. ";
             }
-            
+
             if (user.UserType == String.Empty)
             {
                 errorMessages += "User type is required. ";
             }
 
-            return BadRequest(errorMessages);
+            if (user.UserGender == String.Empty)
+            {
+                errorMessages += "User Gender is required. ";
+            }
+
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = errorMessages
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
         if (!user.Nic.ToLower().Contains('v'))
         {
-            return BadRequest("Wrong NIC format.");
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Wrong NIC format."
+            };
+
+            return BadRequest(apiFailedResponse);
         }
 
         var userType = UserTypeCl.Customer;
@@ -124,12 +168,20 @@ public class UserController : ControllerBase
             Name = user.Name,
             Age = user.Age,
             UserType = userType,
+            UserGender = userGender
         };
 
 
         await _userService.Create(newUser);
 
-        return CreatedAtAction(nameof(GetUser), new { nic = user.Nic }, user);
+        ApiResponse<User> apiResponse = new ApiResponse<User>()
+        {
+            Success = true,
+            Message = "User created successfully",
+            Data = newUser
+        };
+
+        return Ok(apiResponse);
     }
 
 
@@ -142,63 +194,103 @@ public class UserController : ControllerBase
             return BadRequest();
         }
 
-        if (user.Name == String.Empty || user.Age == 0 || user.Age < 0)
+        if (nic != String.Empty && !nic.Contains('v'))
         {
-            string errorMessages = "";
-
-
-            if (user.Name == String.Empty)
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
             {
-                errorMessages += "Name is required. ";
-            }
+                Success = false,
+                Message = "Wrong NIC format."
+            };
 
-            if (user.Age <= 0)
-            {
-                errorMessages += "Age is required. ";
-            }
-
-            return BadRequest(errorMessages);
-        }
-
-        if (!nic.Contains('v'))
-        {
-            return BadRequest("Wrong NIC format.");
+            return BadRequest(apiFailedResponse);
         }
 
         var userToUpdate = await _userService.GetSingle(nic);
 
         if (userToUpdate == null)
         {
-            return NotFound();
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User not found"
+            };
+
+            return NotFound(apiFailedResponse);
         }
 
-        User newUser = new User
+        User updatedUser = new User
         {
             Id = userToUpdate.Id,
             Nic = userToUpdate.Nic,
             Name = user.Name ?? userToUpdate.Name,
             Age = user.Age ?? userToUpdate.Age,
+            UserType = user.UserType ?? userToUpdate.UserType,
+            UserGender = user.UserGender ?? userToUpdate.UserGender,
         };
 
-        await _userService.Update(nic, newUser);
+        await _userService.Update(nic, updatedUser);
 
+        ApiResponse<User> apiResponse = new ApiResponse<User>()
+        {
+            Success = true,
+            Message = "User updated successfully",
+            Data = updatedUser
+        };
 
-        return CreatedAtAction(nameof(GetUser), new { nic = nic }, user);
+        return Ok(apiResponse);
     }
 
 
     [HttpDelete("{nic}")]
-    public async Task<IActionResult> DeleteUser(string nic)
+    public async Task<IActionResult> DeleteUser(string nic , [FromBody] DeleteUserRequest requestUser)
     {
+        var adminUser = await _userService.GetSingle(requestUser.Nic);
+
+        if (adminUser == null)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Please Provide Admin Creds"
+            };
+            
+            return BadRequest(apiFailedResponse);
+        }
+
+        if (!adminUser.UserType.ToLower().Equals(UserTypeCl.Customer.ToLower()))
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "You are not authorized to perform this action"
+            };
+            
+            return BadRequest(apiFailedResponse);
+        }
+        
+        
         var user = await _userService.GetSingle(nic);
 
         if (user == null)
         {
-            return NotFound();
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User not found"
+            };
+
+            return NotFound(apiFailedResponse);
         }
 
         await _userService.Remove(nic);
 
-        return NoContent();
+        ApiResponse<String> apiResponse = new ApiResponse<String>()
+        {
+            Success = true,
+            Message = "User deleted successfully",
+            Data = "GET FOK"
+        };
+        
+        return Ok(apiResponse);
     }
 }

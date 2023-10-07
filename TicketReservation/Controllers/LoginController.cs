@@ -92,7 +92,7 @@ public class LoginController : ControllerBase
             IsActive = login.IsActive,
             Salt = login.Salt,
             Id = login.Id,
-            LastLogin = DateTime.Now,
+            LastLogin = DateTime.UtcNow,
         };
 
         await _loginService.Update(login.Nic, newLogin);
@@ -114,7 +114,6 @@ public class LoginController : ControllerBase
 
         return Ok(apiResponse);
     }
-
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] AuthRequest? registerRequest)
@@ -198,7 +197,7 @@ public class LoginController : ControllerBase
             Nic = registerRequest.Nic,
             Password = hashedPassword,
             Salt = salt,
-            LastLogin = DateTime.Now,
+            LastLogin = DateTime.UtcNow,
             IsActive = true,
         };
 
@@ -209,7 +208,7 @@ public class LoginController : ControllerBase
             Nic = registerRequest.Nic,
             IsActive = true,
             IsAdmin = false,
-            LastLogin = DateTime.Now,
+            LastLogin = DateTime.UtcNow,
         };
 
         ApiResponse<AuthResponse> apiResponse = new ApiResponse<AuthResponse>()
@@ -221,7 +220,6 @@ public class LoginController : ControllerBase
 
         return Ok(apiResponse);
     }
-
 
     [HttpPost("activate")]
     public async Task<IActionResult> Activate([FromBody] ActivateRequest? activateRequest)
@@ -311,6 +309,104 @@ public class LoginController : ControllerBase
         {
             Success = true,
             Message = "User activated successfully",
+            Data = authResponse
+        };
+
+        return Ok(apiResponse);
+    }
+
+    [HttpPost("token-login")]
+    public async Task<IActionResult> LoginWithoutPassword([FromBody] AuthRequest? authRequest)
+    {
+        if (authRequest == null)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Please provide the user credentials"
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
+        if (authRequest.Nic == "")
+        {
+            string errorMessages = "";
+
+            if (authRequest.Nic == String.Empty)
+            {
+                errorMessages += "NIC is required. ";
+            }
+
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = errorMessages
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
+        var isUserExist = await _loginService.GetSingle(authRequest.Nic);
+
+        if (isUserExist is null)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User does not exists"
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
+        DateTime lastLogin = isUserExist.LastLogin;
+
+        // check time difference
+        int maximumInactiveTime = 3;
+        TimeSpan timeDifference = DateTime.UtcNow - lastLogin;
+
+        // _logger.LogInformation("Time difference: " + timeDifference.TotalMinutes);
+
+        if (timeDifference.TotalMinutes > maximumInactiveTime)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "You have been logged out due to inactivity. Please login again."
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
+
+        AuthResponse authResponse = new AuthResponse()
+        {
+            Nic = isUserExist.Nic,
+            IsActive = isUserExist.IsActive,
+            IsAdmin = isUserExist.IsAdmin,
+            LastLogin = isUserExist.LastLogin,
+        };
+
+        string remainingTimeMessage = String.Empty;
+        double remainingTime = (maximumInactiveTime - timeDifference.TotalMinutes);
+
+        if (remainingTime < 1)
+        {
+            remainingTime = remainingTime * 60;
+            string readableTime = remainingTime.ToString("0.##");
+            remainingTimeMessage = readableTime + " seconds";
+        }
+        else
+        {
+            string readableTime = remainingTime.ToString("0.##");
+            remainingTimeMessage = readableTime + " minutes";
+        }
+
+        ApiResponse<AuthResponse> apiResponse = new ApiResponse<AuthResponse>()
+        {
+            Success = true,
+            Message = "User logged in successfully. You will be logged out in " + remainingTimeMessage,
             Data = authResponse
         };
 

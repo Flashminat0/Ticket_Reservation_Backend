@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson.IO;
 using TicketReservation.Models;
@@ -20,6 +21,7 @@ public class UserController : ControllerBase
         _loginService = loginService;
     }
 
+    [Description("This endpoint is used to get all users")]
     [HttpGet]
     public async Task<IActionResult> GetUsers()
     {
@@ -36,6 +38,7 @@ public class UserController : ControllerBase
     }
 
 
+    [Description("This endpoint is used to get a user by NIC")]
     [HttpGet("{nic}")]
     public async Task<IActionResult> GetUser(string nic)
     {
@@ -62,6 +65,7 @@ public class UserController : ControllerBase
         return Ok(apiResponse);
     }
 
+    [Description("This endpoint is used to get users by type")]
     [HttpGet("type/{userType}")]
     public async Task<IActionResult> GetUsersByType(string userType)
     {
@@ -128,6 +132,8 @@ public class UserController : ControllerBase
         return Ok(apiResponse);
     }
 
+    
+    [Description("This endpoint is used to create a new user")]
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest user)
     {
@@ -288,6 +294,7 @@ public class UserController : ControllerBase
     }
 
 
+    [Description("This endpoint is used to update a user")]
     [HttpPut("{nic}")]
     public async Task<IActionResult> UpdateUser(string nic, [FromBody] EditUserRequest user)
     {
@@ -344,6 +351,7 @@ public class UserController : ControllerBase
     }
 
 
+    [Description("This endpoint is used to delete a user")]
     [HttpDelete("{nic}")]
     public async Task<IActionResult> DeleteUser(string nic)
     {

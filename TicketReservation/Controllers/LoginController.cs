@@ -67,7 +67,7 @@ public class LoginController : ControllerBase
                 Message = "User does not exists"
             };
 
-            return BadRequest(apiFailedResponse);
+            return Unauthorized(apiFailedResponse);
         }
 
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(authRequest.Password, isUserExist.Salt);
@@ -82,7 +82,7 @@ public class LoginController : ControllerBase
                 Message = "Invalid credentials"
             };
 
-            return BadRequest(apiFailedResponse);
+            return Unauthorized(apiFailedResponse);
         }
 
         var newLogin = new Login()
@@ -378,6 +378,19 @@ public class LoginController : ControllerBase
 
             return BadRequest(apiFailedResponse);
         }
+        
+        var newLogin = new Login()
+        {
+            Nic = isUserExist.Nic,
+            Password = isUserExist.Password,
+            IsActive = isUserExist.IsActive,
+            IsAdmin = isUserExist.IsAdmin,
+            Salt = isUserExist.Salt,
+            Id = isUserExist.Id,
+            LastLogin = DateTime.UtcNow,
+        };
+        
+        await _loginService.Update(isUserExist.Nic, newLogin);
 
 
         AuthResponse authResponse = new AuthResponse()

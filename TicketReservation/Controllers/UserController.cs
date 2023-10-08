@@ -345,31 +345,31 @@ public class UserController : ControllerBase
 
 
     [HttpDelete("{nic}")]
-    public async Task<IActionResult> DeleteUser(string nic, [FromBody] DeleteUserRequest requestUser)
+    public async Task<IActionResult> DeleteUser(string nic)
     {
-        var adminUser = await _userService.GetSingle(requestUser.Nic);
-
-        if (adminUser == null)
-        {
-            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
-            {
-                Success = false,
-                Message = "Please Provide Admin Creds. Or no Admin found with the given NIC"
-            };
-
-            return BadRequest(apiFailedResponse);
-        }
-
-        if (!adminUser.UserType.ToLower().Equals(UserTypeCl.Customer.ToLower()))
-        {
-            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
-            {
-                Success = false,
-                Message = "You are not authorized to perform this action"
-            };
-
-            return BadRequest(apiFailedResponse);
-        }
+        // var adminUser = await _userService.GetSingle(requestUser.Nic);
+        //
+        // if (adminUser == null)
+        // {
+        //     ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+        //     {
+        //         Success = false,
+        //         Message = "Please Provide Admin Creds. Or no Admin found with the given NIC"
+        //     };
+        //
+        //     return BadRequest(apiFailedResponse);
+        // }
+        //
+        // if (!adminUser.UserType.ToLower().Equals(UserTypeCl.Customer.ToLower()))
+        // {
+        //     ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+        //     {
+        //         Success = false,
+        //         Message = "You are not authorized to perform this action"
+        //     };
+        //
+        //     return BadRequest(apiFailedResponse);
+        // }
 
 
         var user = await _userService.GetSingle(nic);
@@ -386,6 +386,7 @@ public class UserController : ControllerBase
         }
 
         await _userService.Remove(nic);
+        await _loginService.Remove(nic);
 
         ApiResponse<String> apiResponse = new ApiResponse<String>()
         {

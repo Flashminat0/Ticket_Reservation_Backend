@@ -409,8 +409,12 @@ public class LoginController : ControllerBase
         {
             string seconds = $".{remainingTime.ToString("N").Split('.')[1]}";
             string readableSeconds = (Convert.ToDecimal(seconds) * 60).ToString("0.##").Split('.')[0];
-            
+
             if (readableSeconds == "0")
+            {
+                remainingTimeMessage = "";
+            }
+            else if (readableSeconds == "1")
             {
                 remainingTimeMessage = "1 second";
             }

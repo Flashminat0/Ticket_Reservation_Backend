@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using TicketReservation.Models;
@@ -19,6 +20,7 @@ public class LoginController : ControllerBase
         _loginService = loginService;
     }
 
+    [Description("This endpoint is used to login to the system.")]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] AuthRequest? authRequest)
     {
@@ -115,6 +117,7 @@ public class LoginController : ControllerBase
         return Ok(apiResponse);
     }
 
+    [Description("This endpoint is used to register a new user.")]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] AuthRequest? registerRequest)
     {
@@ -221,6 +224,7 @@ public class LoginController : ControllerBase
         return Ok(apiResponse);
     }
 
+    [Description("This endpoint is used to activate or deactivate a user.")]
     [HttpPost("activate")]
     public async Task<IActionResult> Activate([FromBody] ActivateRequest? activateRequest)
     {
@@ -315,6 +319,7 @@ public class LoginController : ControllerBase
         return Ok(apiResponse);
     }
 
+    [Description("This endpoint is used to login to the system without a password.")]
     [HttpPost("token-login")]
     public async Task<IActionResult> LoginWithoutPassword([FromBody] AuthRequest? authRequest)
     {

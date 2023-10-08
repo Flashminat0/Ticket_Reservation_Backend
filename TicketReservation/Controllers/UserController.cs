@@ -97,7 +97,8 @@ public class UserController : ControllerBase
                 ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
                 {
                     Success = false,
-                    Message = "This user type is not supported"
+                    Message =
+                        "This user type is not supported. Supported user types are: [Backoffice], [Travel Agent], [Customer]"
                 };
 
                 return BadRequest(apiFailedResponse);

@@ -378,19 +378,20 @@ public class LoginController : ControllerBase
 
             return BadRequest(apiFailedResponse);
         }
-        
-        var newLogin = new Login()
-        {
-            Nic = isUserExist.Nic,
-            Password = isUserExist.Password,
-            IsActive = isUserExist.IsActive,
-            IsAdmin = isUserExist.IsAdmin,
-            Salt = isUserExist.Salt,
-            Id = isUserExist.Id,
-            LastLogin = DateTime.UtcNow,
-        };
-        
-        await _loginService.Update(isUserExist.Nic, newLogin);
+      
+        // Security Flaw
+        // var newLogin = new Login()
+        // {
+        //     Nic = isUserExist.Nic,
+        //     Password = isUserExist.Password,
+        //     IsActive = isUserExist.IsActive,
+        //     IsAdmin = isUserExist.IsAdmin,
+        //     Salt = isUserExist.Salt,
+        //     Id = isUserExist.Id,
+        //     LastLogin = DateTime.UtcNow,
+        // };
+        //
+        // await _loginService.Update(isUserExist.Nic, newLogin);
 
 
         AuthResponse authResponse = new AuthResponse()

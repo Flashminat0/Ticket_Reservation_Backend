@@ -62,6 +62,70 @@ public class UserController : ControllerBase
         return Ok(apiResponse);
     }
 
+    [HttpGet("type/{userType}")]
+    public async Task<IActionResult> GetUsersByType(string userType)
+    {
+        if (userType == String.Empty)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "User type is required"
+            };
+
+            return BadRequest(apiFailedResponse);
+        }
+
+        string userTypeToCheck = UserTypeCl.Customer;
+
+        if (userType != String.Empty)
+        {
+            if (userType.ToLower() == UserTypeCl.Backoffice.ToLower())
+            {
+                userTypeToCheck = UserTypeCl.Backoffice;
+            }
+            else if (userType.ToLower() == UserTypeCl.TravelAgent.ToLower())
+            {
+                userTypeToCheck = UserTypeCl.TravelAgent;
+            }
+            else if (userType.ToLower() == UserTypeCl.Customer.ToLower())
+            {
+                userTypeToCheck = UserTypeCl.Customer;
+            }
+            else
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "This user type is not supported"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+        }
+
+        var users = await _userService.GetAllByType(userTypeToCheck);
+
+        if (users.Count == 0)
+        {
+            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            {
+                Success = false,
+                Message = "Users not found"
+            };
+
+            return NotFound(apiFailedResponse);
+        }
+
+        ApiResponse<IEnumerable<User>> apiResponse = new ApiResponse<IEnumerable<User>>()
+        {
+            Success = true,
+            Message = "Users retrieved successfully",
+            Data = users
+        };
+
+        return Ok(apiResponse);
+    }
 
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest user)
@@ -79,7 +143,7 @@ public class UserController : ControllerBase
         }
 
         var existingUser = await _userService.GetSingle(user.Nic);
-        
+
         if (existingUser != null)
         {
             ApiFailedResponse apiFailedResponse = new ApiFailedResponse()

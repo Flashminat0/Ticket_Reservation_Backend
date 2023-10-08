@@ -363,7 +363,7 @@ public class LoginController : ControllerBase
         DateTime lastLogin = isUserExist.LastLogin;
 
         // check time difference
-        int maximumInactiveTime = 15;
+        int maximumInactiveTime = 1;
         TimeSpan timeDifference = DateTime.UtcNow - lastLogin;
 
         // _logger.LogInformation("Time difference: " + timeDifference.TotalMinutes);
@@ -378,7 +378,7 @@ public class LoginController : ControllerBase
 
             return BadRequest(apiFailedResponse);
         }
-      
+
         // Security Flaw
         // var newLogin = new Login()
         // {
@@ -407,14 +407,48 @@ public class LoginController : ControllerBase
 
         if (remainingTime < 1)
         {
-            remainingTime = remainingTime * 60;
-            string readableTime = remainingTime.ToString("0.##");
-            remainingTimeMessage = readableTime + " seconds";
+            string seconds = $".{remainingTime.ToString("N").Split('.')[1]}";
+            string readableSeconds = (Convert.ToDecimal(seconds) * 60).ToString("0.##").Split('.')[0];
+            
+            if (readableSeconds == "0")
+            {
+                remainingTimeMessage = "1 second";
+            }
+            else
+            {
+                remainingTimeMessage = readableSeconds + " seconds";
+            }
         }
         else
         {
-            string readableTime = remainingTime.ToString("0.##");
-            remainingTimeMessage = readableTime + " minutes";
+            string minutes = remainingTime.ToString("N").Split('.')[0];
+            string seconds = $".{remainingTime.ToString("N").Split('.')[1]}";
+
+
+            string readableSeconds = (Convert.ToDecimal(seconds) * 60).ToString("0.##").Split('.')[0];
+
+            if (readableSeconds == "0")
+            {
+                if (minutes == "1")
+                {
+                    remainingTimeMessage = minutes + " minute";
+                }
+                else
+                {
+                    remainingTimeMessage = minutes + " minutes";
+                }
+            }
+            else
+            {
+                if (minutes == "1")
+                {
+                    remainingTimeMessage = minutes + " minute " + readableSeconds + " seconds";
+                }
+                else
+                {
+                    remainingTimeMessage = minutes + " minutes " + readableSeconds + " seconds";
+                }
+            }
         }
 
         ApiResponse<AuthResponse> apiResponse = new ApiResponse<AuthResponse>()

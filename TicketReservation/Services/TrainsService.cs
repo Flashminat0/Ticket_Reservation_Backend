@@ -24,6 +24,9 @@ namespace TicketReservation.Services
         
         public async Task<Train?> GetSingle(string trainId) =>
             await _trainCollection.Find(train => train.Id == trainId).FirstOrDefaultAsync();
+        
+        public async Task<List<Train>> GetByOwner(string ownerNic) =>
+            await _trainCollection.Find(train => train.OwnerNic == ownerNic).ToListAsync();
 
         public async Task Create(Train train) =>
             await _trainCollection.InsertOneAsync(train);

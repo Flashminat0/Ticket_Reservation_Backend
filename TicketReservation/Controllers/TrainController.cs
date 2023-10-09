@@ -11,8 +11,9 @@ namespace TicketReservation.Controllers
     {
         private readonly ILogger<TrainController> _logger;
         private readonly TrainService _trainService;
+        private readonly UserService _userService;
 
-        private readonly List<string> districts = new List<string>
+        public readonly List<string> districts = new List<string>
         {
             "ampara",
             "anuradhapura",
@@ -41,10 +42,11 @@ namespace TicketReservation.Controllers
             "vavuniya"
         };
 
-        public TrainController(ILogger<TrainController> logger, TrainService trainService)
+        public TrainController(ILogger<TrainController> logger, TrainService trainService, UserService userService)
         {
             _logger = logger;
             _trainService = trainService;
+            _userService = userService;
         }
 
         [Description("This endpoint is used to get all trains")]
@@ -58,6 +60,20 @@ namespace TicketReservation.Controllers
                 Success = true,
                 Message = "Trains retrieved successfully",
                 Data = trains
+            };
+
+            return Ok(apiResponse);
+        }
+
+        [Description("This endpoint is used to get all districts")]
+        [HttpGet("districts")]
+        public async Task<IActionResult> GetDistricts()
+        {
+            ApiResponse<IEnumerable<string>> apiResponse = new ApiResponse<IEnumerable<string>>()
+            {
+                Success = true,
+                Message = "Districts retrieved successfully",
+                Data = districts
             };
 
             return Ok(apiResponse);
@@ -83,7 +99,6 @@ namespace TicketReservation.Controllers
 
             return Ok(apiResponse);
         }
-
 
         [Description("This endpoint is used to create a new train")]
         [HttpPost]
@@ -111,6 +126,20 @@ namespace TicketReservation.Controllers
                 return BadRequest(apiFailedResponse);
             }
 
+            foreach (string trainDistrict in train.Districts)
+            {
+                if (!districts.Contains(trainDistrict))
+                {
+                    ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                    {
+                        Success = false,
+                        Message = "Districts contain invalid district"
+                    };
+
+                    return BadRequest(apiFailedResponse);
+                }
+            }
+
             if (train.Districts.Count < 2)
             {
                 ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
@@ -122,8 +151,76 @@ namespace TicketReservation.Controllers
                 return BadRequest(apiFailedResponse);
             }
 
-            string trainNumber = train.StartStation.Substring(0, 1) + train.EndStation.Substring(0, 1) + "-" +
-                                 train.StartTime.ToString("HHmm") + "-" + train.EndTime.ToString("HHmm");
+            if (train.StartTime > train.EndTime)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Start time must be before end time"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (train.Price < 0)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Price cannot be negative"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (train.Seats < 0)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Seats cannot be negative"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (!train.OwnerNic.ToLower().Contains('v'))
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Owner NIC must be 10 characters long"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            var owner = await _userService.GetSingle(train.OwnerNic);
+
+            if (owner == null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Owner NIC is invalid"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+            
+            _logger.LogInformation(owner.UserType);
+
+            if (owner.UserType.ToLower() == UserTypeCl.Customer.ToLower())
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Owner is not a Travel Agent nor Backoffice Staff"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
 
             Train createdTrain = new Train()
             {
@@ -136,7 +233,7 @@ namespace TicketReservation.Controllers
                 Price = train.Price,
                 Districts = train.Districts,
                 Seats = train.Seats,
-                TrainNumber = trainNumber
+                OwnerNic = train.OwnerNic
             };
 
             await _trainService.Create(createdTrain);

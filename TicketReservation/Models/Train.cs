@@ -19,7 +19,6 @@ public class Train
 
     [BsonElement("train_name")] public string TrainName { get; set; } = string.Empty;
     [BsonElement("train_type")] public string TrainType { get; set; } = TrainTypeCl.Local;
-    [BsonElement("train_number")] public string TrainNumber { get; set; } = string.Empty;
     [BsonElement("start_station")] public string StartStation { get; set; } = string.Empty;
     [BsonElement("end_station")] public string EndStation { get; set; } = string.Empty;
     [BsonElement("start_time")] public DateTime StartTime { get; set; } = DateTime.UtcNow;
@@ -27,6 +26,7 @@ public class Train
     [BsonElement("price")] public int Price { get; set; } = 0;
     [BsonElement("districts")] public List<string> Districts { get; set; } = new List<string>();
     [BsonElement("distance")] public int Seats { get; set; } = 0;
+    [BsonElement("owner_nic")] public string OwnerNic { get; set; } = string.Empty;
 }
 
 public class CreateTrainRequest
@@ -40,4 +40,5 @@ public class CreateTrainRequest
     [BsonElement("price")] public int Price { get; set; } = 0;
     [BsonElement("districts")] public List<string> Districts { get; set; } = new List<string>();
     [BsonElement("distance")] public int Seats { get; set; } = 0;
+    [BsonElement("owner_nic")] public string OwnerNic { get; set; } = string.Empty;
 }

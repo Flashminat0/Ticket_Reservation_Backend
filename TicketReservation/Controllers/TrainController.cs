@@ -12,6 +12,7 @@ namespace TicketReservation.Controllers
         private readonly ILogger<TrainController> _logger;
         private readonly TrainService _trainService;
         private readonly UserService _userService;
+        private readonly ReservationService _reservationService;
 
         public readonly List<string> districts = new List<string>
         {
@@ -42,11 +43,13 @@ namespace TicketReservation.Controllers
             "vavuniya"
         };
 
-        public TrainController(ILogger<TrainController> logger, TrainService trainService, UserService userService)
+        public TrainController(ILogger<TrainController> logger, TrainService trainService, UserService userService,
+            ReservationService reservationService)
         {
             _logger = logger;
             _trainService = trainService;
             _userService = userService;
+            _reservationService = reservationService;
         }
 
         [Description("This endpoint is used to get all trains")]
@@ -495,7 +498,7 @@ namespace TicketReservation.Controllers
 
                 return BadRequest(apiFailedResponse);
             }
-            
+
 
             if (deletor.UserType.ToLower() != UserTypeCl.Backoffice.ToLower())
             {
@@ -509,6 +512,19 @@ namespace TicketReservation.Controllers
 
                     return BadRequest(apiFailedResponse);
                 }
+            }
+            
+            var reservations = await _reservationService.GetByTrainID(id);
+            
+            if (reservations != null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train has reservations"
+                };
+
+                return BadRequest(apiFailedResponse);
             }
 
             await _trainService.Remove(id);

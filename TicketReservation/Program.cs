@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<LoginService>();
 builder.Services.AddSingleton<TrainService>();
+builder.Services.AddSingleton<ReservationService>();
 
 // add cors
 builder.Services.AddCors(options =>

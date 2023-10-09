@@ -14,31 +14,31 @@ namespace TicketReservation.Controllers
 
         private readonly List<string> districts = new List<string>
         {
-            "Ampara",
-            "Anuradhapura",
-            "Badulla",
-            "Batticaloa",
-            "Colombo",
-            "Galle",
-            "Gampaha",
-            "Hambantota",
-            "Jaffna",
-            "Kalutara",
-            "Kandy",
-            "Kegalle",
-            "Kilinochchi",
-            "Kurunegala",
-            "Mannar",
-            "Matale",
-            "Matara",
-            "Monaragala",
-            "Mullaitivu",
-            "Nuwara Eliya",
-            "Polonnaruwa",
-            "Puttalam",
-            "Ratnapura",
-            "Trincomalee",
-            "Vavuniya"
+            "ampara",
+            "anuradhapura",
+            "badulla",
+            "batticaloa",
+            "colombo",
+            "galle",
+            "gampaha",
+            "hambantota",
+            "jaffna",
+            "kalutara",
+            "kandy",
+            "kegalle",
+            "kilinochchi",
+            "kurunegala",
+            "mannar",
+            "matale",
+            "matara",
+            "monaragala",
+            "mullaitivu",
+            "nuwara eliya",
+            "polonnaruwa",
+            "puttalam",
+            "ratnapura",
+            "trincomalee",
+            "vavuniya"
         };
 
         public TrainController(ILogger<TrainController> logger, TrainService trainService)
@@ -84,27 +84,28 @@ namespace TicketReservation.Controllers
             return Ok(apiResponse);
         }
 
+
         [Description("This endpoint is used to create a new train")]
         [HttpPost]
-        public async Task<IActionResult> CreateTrain(Train train)
+        public async Task<IActionResult> CreateTrain(CreateTrainRequest train)
         {
-            if (train.StartStation == train.EndStation)
-            {
-                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
-                {
-                    Success = false,
-                    Message = "Start station and end station cannot be the same"
-                };
-
-                return BadRequest(apiFailedResponse);
-            }
-
             if (!districts.Contains(train.StartStation) || !districts.Contains(train.EndStation))
             {
                 ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
                 {
                     Success = false,
                     Message = "Start station or end station is invalid"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (train.StartStation == train.EndStation)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Start station and end station cannot be the same"
                 };
 
                 return BadRequest(apiFailedResponse);
@@ -121,13 +122,30 @@ namespace TicketReservation.Controllers
                 return BadRequest(apiFailedResponse);
             }
 
-            await _trainService.Create(train);
+            string trainNumber = train.StartStation.Substring(0, 1) + train.EndStation.Substring(0, 1) + "-" +
+                                 train.StartTime.ToString("HHmm") + "-" + train.EndTime.ToString("HHmm");
+
+            Train createdTrain = new Train()
+            {
+                TrainName = train.TrainName,
+                TrainType = train.TrainType,
+                StartStation = train.StartStation,
+                EndStation = train.EndStation,
+                StartTime = train.StartTime,
+                EndTime = train.EndTime,
+                Price = train.Price,
+                Districts = train.Districts,
+                Seats = train.Seats,
+                TrainNumber = trainNumber
+            };
+
+            await _trainService.Create(createdTrain);
 
             ApiResponse<Train> apiResponse = new ApiResponse<Train>()
             {
                 Success = true,
                 Message = "Train created successfully",
-                Data = train
+                Data = createdTrain
             };
 
             return Ok(apiResponse);

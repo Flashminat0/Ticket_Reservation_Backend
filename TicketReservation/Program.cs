@@ -13,6 +13,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<LoginService>();
+builder.Services.AddSingleton<TrainService>();
 
 // add cors
 builder.Services.AddCors(options =>

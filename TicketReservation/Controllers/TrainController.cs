@@ -80,7 +80,7 @@ namespace TicketReservation.Controllers
         }
 
         [Description("This endpoint is used to get a single train by its ID")]
-        [HttpGet("train/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetTrain(string id)
         {
             var train = await _trainService.GetSingle(id);
@@ -270,6 +270,184 @@ namespace TicketReservation.Controllers
                 Success = true,
                 Message = "Train created successfully",
                 Data = createdTrain
+            };
+
+            return Ok(apiResponse);
+        }
+
+        [Description("This endpoint is used to edit a train")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditTrain(EditTrainRequest train)
+        {
+            if (!districts.Contains(train.StartStation) || !districts.Contains(train.EndStation))
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Start station or end station is invalid"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (train.StartStation == train.EndStation)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Start station and end station cannot be the same"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            foreach (string trainDistrict in train.Districts)
+            {
+                if (!districts.Contains(trainDistrict))
+                {
+                    ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                    {
+                        Success = false,
+                        Message = "Districts contain invalid district"
+                    };
+
+                    return BadRequest(apiFailedResponse);
+                }
+            }
+
+            if (train.Districts.Count < 2)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train must have at least 2 stations"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (train.StartTime > train.EndTime)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Start time must be before end time"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (train.Price < 0)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Price cannot be negative"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (train.Seats < 0)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Seats cannot be negative"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (!train.EditingNic.ToLower().Contains('v'))
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Owner NIC must be 10 characters long"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            var editor = await _userService.GetSingle(train.EditingNic);
+
+            if (editor == null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Owner NIC is invalid"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            // _logger.LogInformation(editor.UserType);
+
+            if (editor.UserType.ToLower() == UserTypeCl.Customer.ToLower())
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Owner is not a Travel Agent nor Backoffice Staff"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            var trainToEdit = await _trainService.GetSingle(train.Id);
+
+
+            if (trainToEdit == null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train not found"
+                };
+
+                return NotFound(apiFailedResponse);
+            }
+
+            if (editor.UserType.ToLower() != UserTypeCl.Backoffice.ToLower())
+            {
+                if (trainToEdit.OwnerNic != train.EditingNic)
+                {
+                    ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                    {
+                        Success = false,
+                        Message = "You are not the owner of this train nor a backoffice staff"
+                    };
+
+                    return BadRequest(apiFailedResponse);
+                }
+            }
+
+
+            Train editedTrain = new Train()
+            {
+                Id = trainToEdit.Id,
+                TrainName = train.TrainName,
+                TrainType = train.TrainType,
+                StartStation = train.StartStation,
+                EndStation = train.EndStation,
+                StartTime = train.StartTime,
+                EndTime = train.EndTime,
+                Price = train.Price,
+                Districts = train.Districts,
+                Seats = train.Seats,
+                IsActive = train.IsActive,
+                OwnerNic = trainToEdit.OwnerNic
+            };
+
+            await _trainService.Update(train.Id, editedTrain);
+
+            ApiResponse<Train> apiResponse = new ApiResponse<Train>()
+            {
+                Success = true,
+                Message = "Train created successfully",
+                Data = editedTrain
             };
 
             return Ok(apiResponse);

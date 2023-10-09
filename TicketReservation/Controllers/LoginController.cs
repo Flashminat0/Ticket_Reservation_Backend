@@ -263,7 +263,7 @@ public class LoginController : ControllerBase
             return BadRequest(apiFailedResponse);
         }
 
-        if (!requester.IsAdmin)
+        if (requester.IsAdmin == false)
         {
             ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
             {

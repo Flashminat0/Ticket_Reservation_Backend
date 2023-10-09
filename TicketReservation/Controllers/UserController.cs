@@ -113,26 +113,51 @@ public class UserController : ControllerBase
 
         if (users.Count == 0)
         {
-            ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+            ApiResponse<IEnumerable<User>> apiNoUserResponse = new ApiResponse<IEnumerable<User>>()
             {
-                Success = false,
-                Message = "Users not found"
+                Success = true,
+                Message = $"No {userTypeToCheck}s found",
+                Data = users
             };
 
-            return NotFound(apiFailedResponse);
+            return Ok(apiNoUserResponse);
         }
 
-        ApiResponse<IEnumerable<User>> apiResponse = new ApiResponse<IEnumerable<User>>()
+
+        List<OtherGetUserResponse> usersWithLogins = new List<OtherGetUserResponse>();
+        foreach (User user in users)
         {
-            Success = true,
-            Message = "Users retrieved successfully",
-            Data = users
-        };
+            var login = await _loginService.GetSingle(user.Nic);
+            if (login is not null)
+            {
+                OtherGetUserResponse userWithLogin = new OtherGetUserResponse
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Age = user.Age,
+                    Nic = user.Nic,
+                    UserType = user.UserType,
+                    UserGender = user.UserGender,
+                    IsActive = login.IsActive,
+                    LastLogin = login.LastLogin
+                };
+
+                usersWithLogins.Add(userWithLogin);
+            }
+        }
+
+        ApiResponse<IEnumerable<OtherGetUserResponse>> apiResponse =
+            new ApiResponse<IEnumerable<OtherGetUserResponse>>()
+            {
+                Success = true,
+                Message = $"{userTypeToCheck}s retrieved successfully",
+                Data = usersWithLogins
+            };
 
         return Ok(apiResponse);
     }
 
-    
+
     [Description("This endpoint is used to create a new user")]
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest user)
@@ -238,6 +263,7 @@ public class UserController : ControllerBase
         }
 
         var userType = UserTypeCl.Customer;
+        bool isAdmin = false;
 
 
         if (user.UserType != String.Empty)
@@ -245,6 +271,7 @@ public class UserController : ControllerBase
             if (user.UserType.ToLower() == UserTypeCl.Backoffice.ToLower())
             {
                 userType = UserTypeCl.Backoffice;
+                isAdmin = true;
             }
             else if (user.UserType.ToLower() == UserTypeCl.TravelAgent.ToLower())
             {
@@ -282,6 +309,24 @@ public class UserController : ControllerBase
 
 
         await _userService.Create(newUser);
+
+        if (isAdmin)
+        {
+            var userLogin = await _loginService.GetSingle(user.Nic);
+        
+            Login updatedLogin = new Login
+            {
+                Id = userLogin.Id,
+                Nic = userLogin.Nic,
+                Password = userLogin.Password,
+                IsActive = userLogin.IsActive,
+                IsAdmin = isAdmin,
+                LastLogin = userLogin.LastLogin,
+                Salt = userLogin.Salt
+            };
+            
+            await _loginService.Update(user.Nic, updatedLogin);
+        }
 
         ApiResponse<User> apiResponse = new ApiResponse<User>()
         {

@@ -452,5 +452,75 @@ namespace TicketReservation.Controllers
 
             return Ok(apiResponse);
         }
+
+        [Description("This endpoint is used to delete a train")]
+        [HttpDelete("{id}/{nic}")]
+        public async Task<IActionResult> DeleteTrain(string id, string nic)
+        {
+            var train = await _trainService.GetSingle(id);
+
+            if (train == null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train not found"
+                };
+
+                return NotFound(apiFailedResponse);
+            }
+
+            var deletor = await _userService.GetSingle(nic);
+
+            if (deletor == null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Owner NIC is invalid"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            // _logger.LogInformation(editor.UserType);
+
+            if (deletor.UserType.ToLower() == UserTypeCl.Customer.ToLower())
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Owner is not a Travel Agent nor Backoffice Staff"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+            
+
+            if (deletor.UserType.ToLower() != UserTypeCl.Backoffice.ToLower())
+            {
+                if (train.OwnerNic != nic)
+                {
+                    ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                    {
+                        Success = false,
+                        Message = "You are not the owner of this train nor a backoffice staff"
+                    };
+
+                    return BadRequest(apiFailedResponse);
+                }
+            }
+
+            await _trainService.Remove(id);
+
+            ApiResponse<Train> apiResponse = new ApiResponse<Train>()
+            {
+                Success = true,
+                Message = "Train deleted successfully",
+                Data = train
+            };
+
+            return Ok(apiResponse);
+        }
     }
 }

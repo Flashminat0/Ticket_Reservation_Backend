@@ -80,7 +80,7 @@ namespace TicketReservation.Controllers
         }
 
         [Description("This endpoint is used to get a single train by its ID")]
-        [HttpGet("{id}")]
+        [HttpGet("train/{id}")]
         public async Task<IActionResult> GetTrain(string id)
         {
             var train = await _trainService.GetSingle(id);
@@ -95,6 +95,33 @@ namespace TicketReservation.Controllers
                 Success = true,
                 Message = "Train retrieved successfully",
                 Data = train
+            };
+
+            return Ok(apiResponse);
+        }
+
+        [Description("This endpoint is used to get a single train by its owner NIC")]
+        [HttpGet("owner/{nic}")]
+        public async Task<IActionResult> GetTrainByOwner(string nic)
+        {
+            var trains = await _trainService.GetByOwner(nic);
+
+            if (trains == null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train not found"
+                };
+
+                return NotFound(apiFailedResponse);
+            }
+
+            ApiResponse<IEnumerable<Train>> apiResponse = new ApiResponse<IEnumerable<Train>>()
+            {
+                Success = true,
+                Message = "Train retrieved successfully",
+                Data = trains
             };
 
             return Ok(apiResponse);
@@ -207,7 +234,7 @@ namespace TicketReservation.Controllers
 
                 return BadRequest(apiFailedResponse);
             }
-            
+
             _logger.LogInformation(owner.UserType);
 
             if (owner.UserType.ToLower() == UserTypeCl.Customer.ToLower())

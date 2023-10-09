@@ -47,7 +47,14 @@ public class EditUserRequest
     [BsonElement("gender")] public string? UserGender { get; set; } = String.Empty;
 }
 
-public class DeleteUserRequest
+public class OtherGetUserResponse
 {
+    [BsonElement("name")] public string Id { get; set; } = string.Empty;
+    [BsonElement("name")] public string Name { get; set; } = string.Empty;
+    [BsonElement("age")] public int Age { get; set; } = 0;
     [BsonElement("nic")] public string Nic { get; set; } = string.Empty;
+    [BsonElement("user_type")] public string UserType { get; set; } = UserTypeCl.Customer;
+    [BsonElement("gender")] public string UserGender { get; set; } = UserGenderCl.Male;
+    [BsonElement("is_active")] public bool IsActive { get; set; } = false;
+    [BsonElement("last_login")] public DateTime LastLogin { get; set; } = DateTime.UtcNow;
 }

@@ -280,8 +280,19 @@ namespace TicketReservation.Controllers
 
         [Description("This endpoint is used to edit a train")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> EditTrain(EditTrainRequest train)
+        public async Task<IActionResult> EditTrain(EditTrainRequest? train)
         {
+            if (train == null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train is null"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+            
             if (!districts.Contains(train.StartStation) || !districts.Contains(train.EndStation))
             {
                 ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
@@ -516,7 +527,7 @@ namespace TicketReservation.Controllers
             
             var reservations = await _reservationService.GetByTrainID(id);
             
-            if (reservations != null)
+            if (reservations.Count > 0)
             {
                 ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
                 {

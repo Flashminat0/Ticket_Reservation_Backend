@@ -160,7 +160,7 @@ public class UserController : ControllerBase
 
     [Description("This endpoint is used to create a new user")]
     [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest user)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest? user)
     {
         //validate the user
         if (user == null)

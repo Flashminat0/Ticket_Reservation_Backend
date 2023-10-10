@@ -42,6 +42,8 @@ public class CreateTrainRequest
     [BsonElement("districts")] public List<string> Districts { get; set; } = new List<string>();
     [BsonElement("distance")] public int Seats { get; set; } = 0;
     [BsonElement("owner_nic")] public string OwnerNic { get; set; } = string.Empty;
+    [BsonElement("is_active")] public bool IsActive { get; set; } = false;
+
 }
 
 public class EditTrainRequest

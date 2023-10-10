@@ -281,7 +281,7 @@ namespace TicketReservation.Controllers
 
         [Description("This endpoint is used to edit a train")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> EditTrain(string id ,EditTrainRequest? train)
+        public async Task<IActionResult> EditTrain(string id, EditTrainRequest? train)
         {
             if (train == null)
             {
@@ -450,6 +450,18 @@ namespace TicketReservation.Controllers
                 }
             }
 
+            var reservations = await _reservationService.GetByTrainID(id);
+
+            if (reservations.Count > 0 && train.IsActive == false)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train has reservations. You cannot deactivate it"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
 
             Train editedTrain = new Train()
             {
@@ -468,7 +480,7 @@ namespace TicketReservation.Controllers
             };
 
             _logger.LogInformation(editedTrain.Id);
-            
+
             await _trainService.Update(id, editedTrain);
 
             ApiResponse<Train> apiResponse = new ApiResponse<Train>()
@@ -496,6 +508,17 @@ namespace TicketReservation.Controllers
                 };
 
                 return NotFound(apiFailedResponse);
+            }
+
+            if (train.IsActive == true)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train is active. You need to deactivate it first"
+                };
+
+                return BadRequest(apiFailedResponse);
             }
 
             var deletor = await _userService.GetSingle(nic);

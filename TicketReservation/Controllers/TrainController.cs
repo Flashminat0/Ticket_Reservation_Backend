@@ -263,7 +263,8 @@ namespace TicketReservation.Controllers
                 Price = train.Price,
                 Districts = train.Districts,
                 Seats = train.Seats,
-                OwnerNic = train.OwnerNic
+                OwnerNic = train.OwnerNic,
+                IsActive = train.IsActive
             };
 
             await _trainService.Create(createdTrain);
@@ -280,8 +281,30 @@ namespace TicketReservation.Controllers
 
         [Description("This endpoint is used to edit a train")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> EditTrain(EditTrainRequest train)
+        public async Task<IActionResult> EditTrain(string id ,EditTrainRequest? train)
         {
+            if (train == null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train is null"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
+            if (train.Id == null || train.Id == "")
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "Train ID is null"
+                };
+
+                return BadRequest(apiFailedResponse);
+            }
+
             if (!districts.Contains(train.StartStation) || !districts.Contains(train.EndStation))
             {
                 ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
@@ -430,7 +453,7 @@ namespace TicketReservation.Controllers
 
             Train editedTrain = new Train()
             {
-                Id = trainToEdit.Id,
+                Id = id,
                 TrainName = train.TrainName,
                 TrainType = train.TrainType,
                 StartStation = train.StartStation,
@@ -444,12 +467,14 @@ namespace TicketReservation.Controllers
                 OwnerNic = trainToEdit.OwnerNic
             };
 
-            await _trainService.Update(train.Id, editedTrain);
+            _logger.LogInformation(editedTrain.Id);
+            
+            await _trainService.Update(id, editedTrain);
 
             ApiResponse<Train> apiResponse = new ApiResponse<Train>()
             {
                 Success = true,
-                Message = "Train created successfully",
+                Message = "Train Updated successfully",
                 Data = editedTrain
             };
 
@@ -513,10 +538,10 @@ namespace TicketReservation.Controllers
                     return BadRequest(apiFailedResponse);
                 }
             }
-            
+
             var reservations = await _reservationService.GetByTrainID(id);
-            
-            if (reservations != null)
+
+            if (reservations.Count > 0)
             {
                 ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
                 {

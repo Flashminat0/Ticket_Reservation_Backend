@@ -92,6 +92,7 @@ public class LoginController : ControllerBase
             Nic = login.Nic,
             Password = login.Password,
             IsActive = login.IsActive,
+            IsAdmin = login.IsAdmin,
             Salt = login.Salt,
             Id = login.Id,
             LastLogin = DateTime.UtcNow,

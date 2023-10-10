@@ -9,17 +9,19 @@ namespace TicketReservation.Controllers
     [Route("api/[controller]")]
     public class ReservationController : ControllerBase
     {
-        private readonly ILogger<TrainController> _logger;
+        // private readonly ILogger<TrainController> _logger;
         private readonly ReservationService _reservationService;
         private readonly TrainService _trainService;
+        private readonly UserService _userService;
 
 
-        public ReservationController(ILogger<TrainController> logger, ReservationService reservationService,
-            TrainService trainService)
+        public ReservationController(ReservationService reservationService,
+            TrainService trainService, UserService userService)
         {
-            _logger = logger;
+            // _logger = logger;
             _reservationService = reservationService;
             _trainService = trainService;
+            _userService = userService;
         }
 
 
@@ -98,6 +100,18 @@ namespace TicketReservation.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateReservation(Reservation reservation)
         {
+            var user = await _userService.GetSingle(reservation.UserNic);
+            if (user == null)
+            {
+                ApiFailedResponse apiFailedResponse = new ApiFailedResponse()
+                {
+                    Success = false,
+                    Message = "User not found"
+                };
+
+                return NotFound(apiFailedResponse);
+            }
+
             var train = await _trainService.GetSingle(reservation.TrainId);
 
             if (train == null)
@@ -195,13 +209,13 @@ namespace TicketReservation.Controllers
 
             return Ok(apiResponse);
         }
-        
+
         //Delete
         [Description("This endpoint is used to delete a reservation.")]
-        [HttpDelete("{resrevationID}")]
-        public async Task<IActionResult> DeleteReservation(string resrevationID)
+        [HttpDelete("{reservationId}")]
+        public async Task<IActionResult> DeleteReservation(string reservationId)
         {
-            var reservation = await _reservationService.GetByReservationID(resrevationID);
+            var reservation = await _reservationService.GetByReservationID(reservationId);
 
             if (reservation == null)
             {
@@ -230,7 +244,7 @@ namespace TicketReservation.Controllers
             train.Seats += reservation.Seats;
 
             await _trainService.Update(train.Id, train);
-            await _reservationService.Remove(resrevationID);
+            await _reservationService.Remove(reservationId);
 
             ApiResponse<Reservation> apiResponse = new ApiResponse<Reservation>()
             {
@@ -241,6 +255,5 @@ namespace TicketReservation.Controllers
 
             return Ok(apiResponse);
         }
-        
     }
 }
